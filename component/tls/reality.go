@@ -39,8 +39,36 @@ type RealityConfig struct {
 	ShortID   [RealityMaxShortIDLen]byte
 }
 
-//go:linkname aesgcmPreferred crypto/tls.aesgcmPreferred
-func aesgcmPreferred(ciphers []uint16) bool
+var knownCipherSuites = func() map[uint16]struct{} {
+	known := make(map[uint16]struct{})
+	for _, suite := range tls.CipherSuites() {
+		known[suite.ID] = struct{}{}
+	}
+	for _, suite := range tls.InsecureCipherSuites() {
+		known[suite.ID] = struct{}{}
+	}
+	return known
+}()
+
+var aesgcmCipherSuites = map[uint16]struct{}{
+	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:   {},
+	tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:   {},
+	tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: {},
+	tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384: {},
+	tls.TLS_AES_128_GCM_SHA256:                  {},
+	tls.TLS_AES_256_GCM_SHA384:                  {},
+}
+
+func aesgcmPreferred(ciphers []uint16) bool {
+	for _, cipherID := range ciphers {
+		if _, ok := knownCipherSuites[cipherID]; !ok {
+			continue
+		}
+		_, preferred := aesgcmCipherSuites[cipherID]
+		return preferred
+	}
+	return false
+}
 
 func GetRealityConn(ctx context.Context, conn net.Conn, ClientFingerprint string, tlsConfig *tls.Config, realityConfig *RealityConfig) (net.Conn, error) {
 	retry := 0
