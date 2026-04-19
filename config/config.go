@@ -672,6 +672,7 @@ func parseProxies(cfg *RawConfig) (proxies map[string]C.Proxy, providersMap map[
 	var proxyList []string
 	proxiesList := list.New()
 	groupsList := list.New()
+	externalProviders := make([]providerTypes.ProxyProvider, 0, len(providersConfig))
 
 	proxies["DIRECT"] = adapter.NewProxy(outbound.NewDirect())
 	proxies["REJECT"] = adapter.NewProxy(outbound.NewReject())
@@ -722,6 +723,7 @@ func parseProxies(cfg *RawConfig) (proxies map[string]C.Proxy, providersMap map[
 		}
 
 		providersMap[name] = pd
+		externalProviders = append(externalProviders, pd)
 	}
 
 	// parse proxy group
@@ -749,12 +751,15 @@ func parseProxies(cfg *RawConfig) (proxies map[string]C.Proxy, providersMap map[
 	hc := provider.NewHealthCheck(ps, "", 0, true, nil)
 	pd, _ := provider.NewCompatibleProvider(provider.ReservedName, ps, hc)
 	providersMap[provider.ReservedName] = pd
+	globalProviders := make([]providerTypes.ProxyProvider, 0, len(externalProviders)+1)
+	globalProviders = append(globalProviders, pd)
+	globalProviders = append(globalProviders, externalProviders...)
 
 	global := outboundgroup.NewSelector(
 		&outboundgroup.GroupCommonOption{
 			Name: "GLOBAL",
 		},
-		[]providerTypes.ProxyProvider{pd},
+		globalProviders,
 	)
 	proxies["GLOBAL"] = adapter.NewProxy(global)
 	ProxiesList = proxiesList
