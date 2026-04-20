@@ -685,11 +685,13 @@ func parseProxies(cfg *RawConfig) (proxies map[string]C.Proxy, providersMap map[
 	for idx, mapping := range proxiesConfig {
 		proxy, err := adapter.ParseProxy(mapping)
 		if err != nil {
-			return nil, nil, fmt.Errorf("proxy %d: %w", idx, err)
+			log.Warnln("proxy %d: %v, skipping", idx, err)
+			continue
 		}
 
 		if _, exist := proxies[proxy.Name()]; exist {
-			return nil, nil, fmt.Errorf("proxy %s is the duplicate name", proxy.Name())
+			log.Warnln("proxy %s is the duplicate name, skipping", proxy.Name())
+			continue
 		}
 		proxies[proxy.Name()] = proxy
 		proxyList = append(proxyList, proxy.Name())

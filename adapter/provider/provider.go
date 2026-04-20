@@ -393,7 +393,8 @@ func proxiesParseAndFilter(filter string, excludeFilter string, excludeTypeArray
 
 				proxy, err := adapter.ParseProxy(mapping)
 				if err != nil {
-					return nil, fmt.Errorf("proxy %d error: %w", idx, err)
+					log.Warnln("[Provider] proxy %d error: %v, skipping", idx, err)
+					continue
 				}
 
 				proxiesSet[name] = struct{}{}
