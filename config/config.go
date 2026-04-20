@@ -277,54 +277,54 @@ type RawConfig struct {
 	RedirPort               int               `yaml:"redir-port" json:"redir-port"`
 	TProxyPort              int               `yaml:"tproxy-port" json:"tproxy-port"`
 	MixedPort               int               `yaml:"mixed-port" json:"mixed-port"`
-	ShadowSocksConfig       string            `yaml:"ss-config"`
-	VmessConfig             string            `yaml:"vmess-config"`
-	InboundTfo              bool              `yaml:"inbound-tfo"`
-	InboundMPTCP            bool              `yaml:"inbound-mptcp"`
+	ShadowSocksConfig       string            `yaml:"ss-config" json:"ss-config"`
+	VmessConfig             string            `yaml:"vmess-config" json:"vmess-config"`
+	InboundTfo              bool              `yaml:"inbound-tfo" json:"inbound-tfo"`
+	InboundMPTCP            bool              `yaml:"inbound-mptcp" json:"inbound-mptcp"`
 	Authentication          []string          `yaml:"authentication" json:"authentication"`
-	SkipAuthPrefixes        []netip.Prefix    `yaml:"skip-auth-prefixes"`
+	SkipAuthPrefixes        []netip.Prefix    `yaml:"skip-auth-prefixes" json:"skip-auth-prefixes"`
 	AllowLan                bool              `yaml:"allow-lan" json:"allow-lan"`
 	BindAddress             string            `yaml:"bind-address" json:"bind-address"`
 	Mode                    T.TunnelMode      `yaml:"mode" json:"mode"`
 	UnifiedDelay            bool              `yaml:"unified-delay" json:"unified-delay"`
 	LogLevel                log.LogLevel      `yaml:"log-level" json:"log-level"`
 	IPv6                    bool              `yaml:"ipv6" json:"ipv6"`
-	ExternalController      string            `yaml:"external-controller"`
-	ExternalControllerTLS   string            `yaml:"external-controller-tls"`
-	ExternalUI              string            `yaml:"external-ui"`
+	ExternalController      string            `yaml:"external-controller" json:"external-controller"`
+	ExternalControllerTLS   string            `yaml:"external-controller-tls" json:"external-controller-tls"`
+	ExternalUI              string            `yaml:"external-ui" json:"external-ui"`
 	ExternalUIURL           string            `yaml:"external-ui-url" json:"external-ui-url"`
 	ExternalUIName          string            `yaml:"external-ui-name" json:"external-ui-name"`
-	Secret                  string            `yaml:"secret"`
-	Interface               string            `yaml:"interface-name"`
-	RoutingMark             int               `yaml:"routing-mark"`
-	Tunnels                 []LC.Tunnel       `yaml:"tunnels"`
+	Secret                  string            `yaml:"secret" json:"secret"`
+	Interface               string            `yaml:"interface-name" json:"interface-name"`
+	RoutingMark             int               `yaml:"routing-mark" json:"routing-mark"`
+	Tunnels                 []LC.Tunnel       `yaml:"tunnels" json:"tunnels"`
 	GeodataMode             bool              `yaml:"geodata-mode" json:"geodata-mode"`
 	GeodataLoader           string            `yaml:"geodata-loader" json:"geodata-loader"`
 	TCPConcurrent           bool              `yaml:"tcp-concurrent" json:"tcp-concurrent"`
 	FindProcessMode         P.FindProcessMode `yaml:"find-process-mode" json:"find-process-mode"`
-	GlobalClientFingerprint string            `yaml:"global-client-fingerprint"`
-	GlobalUA                string            `yaml:"global-ua"`
-	KeepAliveInterval       int               `yaml:"keep-alive-interval"`
+	GlobalClientFingerprint string            `yaml:"global-client-fingerprint" json:"global-client-fingerprint"`
+	GlobalUA                string            `yaml:"global-ua" json:"global-ua"`
+	KeepAliveInterval       int               `yaml:"keep-alive-interval" json:"keep-alive-interval"`
 
 	Sniffer       RawSniffer                `yaml:"sniffer" json:"sniffer"`
-	ProxyProvider map[string]map[string]any `yaml:"proxy-providers"`
-	RuleProvider  map[string]map[string]any `yaml:"rule-providers"`
+	ProxyProvider map[string]map[string]any `yaml:"proxy-providers" json:"proxy-providers"`
+	RuleProvider  map[string]map[string]any `yaml:"rule-providers" json:"rule-providers"`
 	Hosts         map[string]any            `yaml:"hosts" json:"hosts"`
 	NTP           RawNTP                    `yaml:"ntp" json:"ntp"`
 	DNS           RawDNS                    `yaml:"dns" json:"dns"`
-	Tun           RawTun                    `yaml:"tun"`
-	TuicServer    RawTuicServer             `yaml:"tuic-server"`
-	EBpf          EBpf                      `yaml:"ebpf"`
-	IPTables      IPTables                  `yaml:"iptables"`
-	Experimental  Experimental              `yaml:"experimental"`
-	Profile       Profile                   `yaml:"profile"`
-	GeoXUrl       GeoXUrl                   `yaml:"geox-url"`
-	Proxy         []map[string]any          `yaml:"proxies"`
-	ProxyGroup    []map[string]any          `yaml:"proxy-groups"`
-	Rule          []string                  `yaml:"rules"`
-	SubRules      map[string][]string       `yaml:"sub-rules"`
-	RawTLS        TLS                       `yaml:"tls"`
-	Listeners     []map[string]any          `yaml:"listeners"`
+	Tun           RawTun                    `yaml:"tun" json:"tun"`
+	TuicServer    RawTuicServer             `yaml:"tuic-server" json:"tuic-server"`
+	EBpf          EBpf                      `yaml:"ebpf" json:"ebpf"`
+	IPTables      IPTables                  `yaml:"iptables" json:"iptables"`
+	Experimental  Experimental              `yaml:"experimental" json:"experimental"`
+	Profile       Profile                   `yaml:"profile" json:"profile"`
+	GeoXUrl       GeoXUrl                   `yaml:"geox-url" json:"geox-url"`
+	Proxy         []map[string]any          `yaml:"proxies" json:"proxies"`
+	ProxyGroup    []map[string]any          `yaml:"proxy-groups" json:"proxy-groups"`
+	Rule          []string                  `yaml:"rules" json:"rules"`
+	SubRules      map[string][]string       `yaml:"sub-rules" json:"sub-rules"`
+	RawTLS        TLS                       `yaml:"tls" json:"tls"`
+	Listeners     []map[string]any          `yaml:"listeners" json:"listeners"`
 
 	ClashForAndroid RawClashForAndroid `yaml:"clash-for-android" json:"clash-for-android"`
 }
@@ -754,6 +754,13 @@ func parseProxies(cfg *RawConfig) (proxies map[string]C.Proxy, providersMap map[
 	globalProviders := make([]providerTypes.ProxyProvider, 0, len(externalProviders)+1)
 	globalProviders = append(globalProviders, pd)
 	globalProviders = append(globalProviders, externalProviders...)
+
+	log.Infoln("[APP] parseProxies: proxyList=%v", proxyList)
+	log.Infoln("[APP] parseProxies: externalProviders count=%d", len(externalProviders))
+	for i, ep := range externalProviders {
+		log.Infoln("[APP] parseProxies: externalProvider[%d] name=%s type=%s", i, ep.Name(), ep.VehicleType().String())
+	}
+	log.Infoln("[APP] parseProxies: globalProviders count=%d, compatible proxies=%d", len(globalProviders), len(ps))
 
 	global := outboundgroup.NewSelector(
 		&outboundgroup.GroupCommonOption{
