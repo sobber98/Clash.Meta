@@ -33,3 +33,28 @@ func TestConvertsV2Ray_normal(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, expected, proxies)
 }
+
+// https://github.com/anytls/anytls-go/blob/main/docs/uri_scheme.md
+func TestConvertsV2Ray_anytls(t *testing.T) {
+	anytlstest := "anytls://mypassword@example.com:8443?sni=real.example.com&insecure=1&hpkp=deadbeef#anytls-node"
+
+	expected := []map[string]interface{}{
+		{
+			"name":             "anytls-node",
+			"type":             "anytls",
+			"server":           "example.com",
+			"port":             "8443",
+			"username":         "mypassword",
+			"password":         "mypassword",
+			"sni":              "real.example.com",
+			"fingerprint":      "deadbeef",
+			"skip-cert-verify": true,
+			"udp":              true,
+		},
+	}
+
+	proxies, err := ConvertsV2Ray([]byte(anytlstest))
+
+	assert.Nil(t, err)
+	assert.Equal(t, expected, proxies)
+}
