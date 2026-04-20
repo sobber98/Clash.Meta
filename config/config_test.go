@@ -78,6 +78,57 @@ func TestParseProxiesGlobalIncludesExternalProviderNodes(t *testing.T) {
 	}
 }
 
+func TestParseProxiesSupportsAnyTLSNodes(t *testing.T) {
+	proxies, _, err := parseProxies(&RawConfig{
+		Proxy: []map[string]any{
+			{
+				"name":                 "AnyTLS Node",
+				"type":                 "anytls",
+				"server":               "example.com",
+				"port":                 443,
+				"password":             "secret",
+				"udp":                  true,
+				"skip-cert-verify":     true,
+				"client-fingerprint":   "chrome",
+				"idle-session-timeout": 30,
+				"min-idle-session":     1,
+				"interface-name":       "",
+				"routing-mark":         0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("parse proxies: %v", err)
+	}
+
+	proxy, ok := proxies["AnyTLS Node"]
+	if !ok {
+		t.Fatal("AnyTLS proxy was not created")
+	}
+	if proxy.Type() != C.AnyTLS {
+		t.Fatalf("unexpected proxy type: got %s", proxy.Type())
+	}
+
+	globalProxy, ok := proxies["GLOBAL"]
+	if !ok {
+		t.Fatal("GLOBAL proxy group was not created")
+	}
+
+	var payload struct {
+		All []string `json:"all"`
+	}
+	data, err := globalProxy.MarshalJSON()
+	if err != nil {
+		t.Fatalf("marshal GLOBAL proxy: %v", err)
+	}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		t.Fatalf("decode GLOBAL proxy payload: %v", err)
+	}
+	if !containsProxyName(payload.All, "AnyTLS Node") {
+		t.Fatalf("GLOBAL group missing AnyTLS node, got %v", payload.All)
+	}
+}
+
 func containsProxyName(names []string, target string) bool {
 	for _, name := range names {
 		if name == target {

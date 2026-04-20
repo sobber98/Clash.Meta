@@ -40,6 +40,7 @@ const (
 	Hysteria2
 	WireGuard
 	Tuic
+	AnyTLS
 )
 
 const (
@@ -203,6 +204,8 @@ func (at AdapterType) String() string {
 		return "WireGuard"
 	case Tuic:
 		return "Tuic"
+	case AnyTLS:
+		return "AnyTLS"
 
 	case Relay:
 		return "Relay"
